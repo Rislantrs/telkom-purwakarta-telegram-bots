@@ -11,7 +11,7 @@ Seluruh kredensial sensitif (seperti Token Bot Telegram, API Key AI, Spreadsheet
 | Nama File | Nama Layanan | Mode Integrasi Spreadsheet | Layanan Eksternal |
 | :--- | :--- | :--- | :--- |
 | `Bot_Rekap_Validasi_Tiang_Harian.gs` | Bot Rekap Validasi Tiang Harian | Container-Bound (`getActiveSpreadsheet`) | Telegram Bot API |
-| `Code.gs` | Bot Rekap Order Teknisi as Sales | Container-Bound (`getActiveSpreadsheet`) | Telegram Bot API |
+| `Bot_Rekap_Order_Teknisi_as_Sales.gs` | Bot Rekap Order Teknisi as Sales | Container-Bound (`getActiveSpreadsheet`) | Telegram Bot API |
 | `Bot_Rekap_Cat_Tiang.gs` | Bot Evidensi Pengecatan Tiang AI Vision | Standalone / Bound (`openById`) | Telegram Bot API, Google Drive, Gemini API, OpenRouter API |
 
 ---
@@ -24,7 +24,7 @@ Skrip ini memantau grup Telegram operasional secara pasif maupun interaktif untu
 - **Anti-Duplikasi & Antrean:** Menggunakan `LockService` serta himpunan pengecekan global sehingga kode tiang yang sudah dilaporkan sebelumnya tidak dicatat ganda.
 - **Pelaporan Harian Otomatis:** Mendukung perintah manual `/rekap` dan pengiriman rekapitulasi kepatuhan target harian (`TARGET_HARIAN = 10` per teknisi) melalui Time-Driven Trigger pada pukul 12:00 WIB dan 15:00 WIB.
 
-### 2. Bot Rekap Order Teknisi as Sales (`Code.gs`)
+### 2. Bot Rekap Order Teknisi as Sales (`Bot_Rekap_Order_Teknisi_as_Sales.gs`)
 Skrip ini mengotomatiskan pencatatan order penjualan oleh teknisi (nomor Service Order / `SC` dan Work Order / `WO`) pada area STO yang didukung (`PWK`, `PLD`, `CBU`).
 - **Parser Multi-Skenario:** Mengenali laporan dalam format terstruktur multi-baris, satu baris ringkas, maupun banyak order dalam satu pesan sekaligus.
 - **Validasi Duplikasi Lintas Sheet:** Memeriksa kecocokan kode `SC` dan `WO` terhadap sheet `DATA BOT` dan arsip `DATA MANUAL` sebelum penyimpanan dilakukan.
@@ -51,7 +51,7 @@ Sebelum memasang skrip, siapkan tab sheet sesuai ketentuan masing-masing modul:
    - Kolom D: `Username Telegram`
    - Kolom E: `Label Tiang`
 
-### B. Spreadsheet untuk `Code.gs` (Bot Order Teknisi)
+### B. Spreadsheet untuk `Bot_Rekap_Order_Teknisi_as_Sales.gs` (Bot Order Teknisi)
 Bot ini dapat menginisialisasi header otomatis jika tab belum ada, namun disarankan menyiapkan tiga tab berikut:
 1. **`DATA BOT`** (Header pada baris 1):
    `TANGGAL INPUT` | `NIK` | `NAMA TEKNISI` | `Username Akun Digipos` | `Username Telegram` | `STO` | `NO SC` | `NO WO` | `BULAN`
@@ -81,12 +81,12 @@ Bot ini dapat menginisialisasi header otomatis jika tab belum ada, namun disaran
 1. Buka Telegram dan cari akun resmi `@BotFather`.
 2. Jalankan perintah `/newbot`, lalu tentukan nama tampilan serta username bot (diakhiri kata `bot`).
 3. Simpan **HTTP API Token** yang diberikan.
-4. Khusus untuk bot pemantau grup (`Bot_Rekap_Validasi_Tiang_Harian.gs` dan `Code.gs`), jalankan perintah `/setprivacy` di `@BotFather`, pilih bot terkait, lalu ubah menjadi **`Disable`** agar bot dapat membaca pesan laporan teknisi di dalam grup.
+4. Khusus untuk bot pemantau grup (`Bot_Rekap_Validasi_Tiang_Harian.gs` dan `Bot_Rekap_Order_Teknisi_as_Sales.gs`), jalankan perintah `/setprivacy` di `@BotFather`, pilih bot terkait, lalu ubah menjadi **`Disable`** agar bot dapat membaca pesan laporan teknisi di dalam grup.
 
 ### 2. Memasang Skrip ke Google Apps Script
-1. Untuk bot yang bersifat container-bound (`Bot_Rekap_Validasi_Tiang_Harian.gs` dan `Code.gs`), buka file Google Spreadsheet terkait, lalu pilih menu **Ekstensi -> Apps Script**.
+1. Untuk bot yang bersifat container-bound (`Bot_Rekap_Validasi_Tiang_Harian.gs` dan `Bot_Rekap_Order_Teknisi_as_Sales.gs`), buka file Google Spreadsheet terkait, lalu pilih menu **Ekstensi -> Apps Script**.
 2. Untuk `Bot_Rekap_Cat_Tiang.gs`, dapat dibuat melalui menu **Ekstensi -> Apps Script** dari Spreadsheet maupun sebagai proyek mandiri di `https://script.google.com`.
-3. Salin seluruh isi file `.gs` ke editor Apps Script, lalu simpan proyek.
+3. Salin seluruh isi file `.gs` ke editor Apps Script (pada tab default `Code.gs`), lalu simpan proyek.
 4. Pada **`Bot_Rekap_Validasi_Tiang_Harian.gs`**, lengkapi array `DAFTAR_TEKNISI` dengan username Telegram teknisi resmi (contoh: `"@teknisi_01"`).
 
 ### 3. Mengatur Kredensial via Script Properties
@@ -94,7 +94,7 @@ Di editor Apps Script, buka menu **Project Settings (ikon roda gigi)** -> gulir 
 
 - **`Bot_Rekap_Validasi_Tiang_Harian.gs`**:
   - `BOT_TOKEN`: Token bot dari `@BotFather`
-- **`Code.gs`**:
+- **`Bot_Rekap_Order_Teknisi_as_Sales.gs`**:
   - `BOT_TOKEN`: Token bot dari `@BotFather`
   - `WEBAPP_URL`: URL Web App (`/exec`) yang didapat setelah deployment
 - **`Bot_Rekap_Cat_Tiang.gs`**:
@@ -110,7 +110,7 @@ Di editor Apps Script, buka menu **Project Settings (ikon roda gigi)** -> gulir 
 2. Pilih tipe **Web app**, atur **Execute as** ke `Me` (akun Anda), dan **Who has access** ke `Anyone`.
 3. Klik **Deploy**, lakukan otorisasi izin akses Google Sheets / Drive / External Request saat diminta, lalu salin **Web App URL** (`/exec`).
 4. Daftarkan webhook Telegram:
-   - Pada **`Code.gs`**, masukkan URL Web App ke Script Property `WEBAPP_URL`, lalu jalankan fungsi **`setWebhook()`** langsung dari editor Apps Script.
+   - Pada **`Bot_Rekap_Order_Teknisi_as_Sales.gs`**, masukkan URL Web App ke Script Property `WEBAPP_URL`, lalu jalankan fungsi **`setWebhook()`** langsung dari editor Apps Script.
    - Pada **`Bot_Rekap_Validasi_Tiang_Harian.gs`** dan **`Bot_Rekap_Cat_Tiang.gs`**, akses tautan berikut melalui browser:
      `https://api.telegram.org/bot<TOKEN_BOT_ANDA>/setWebhook?url=<WEBAPP_URL_ANDA>`
 5. Khusus **`Bot_Rekap_Validasi_Tiang_Harian.gs`**, jalankan fungsi **`pasangJadwalOtomatis()`** satu kali di editor Apps Script untuk mengaktifkan rekap otomatis pukul 12:00 dan 15:00 WIB.
@@ -144,5 +144,5 @@ Panduan langkah demi langkah secara mendetail mulai dari pembuatan Spreadsheet, 
 ## Penulis
 
 **M Rislan Tristansyah**
-Program Studi Teknik Telekomunikasi, Universitas Pendidikan Indonesia
+Program Studi Sistem Telekomunikasi, Universitas Pendidikan Indonesia Kampus di Purwakarta
 Pelaksana Program P3Kh PT Telkom Indonesia (Datel Purwakarta dan Telkom Akses STO Purwakarta)
